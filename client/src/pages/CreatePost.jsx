@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { preview } from "../assets";
 import { getRandomPrompt } from "../utils";
 import { FormField, Loader } from "../components";
 
 const CreatePost = () => {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: "",
     prompt: "",
@@ -15,14 +18,10 @@ const CreatePost = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSurpriseMe = () => {
     const randomPrompt = getRandomPrompt(form.prompt);
-
     setForm({ ...form, prompt: randomPrompt });
   };
 
@@ -30,7 +29,6 @@ const CreatePost = () => {
     if (form.prompt) {
       try {
         setGeneratingImg(true);
-
         const response = await fetch("http://localhost:3000/api/v1/dalle", {
           method: "POST",
           headers: {
@@ -42,7 +40,6 @@ const CreatePost = () => {
         });
 
         const data = await response.json();
-
         setForm({ ...form, photo: `data:image/jpeg;base64,${data.photo}` });
       } catch (err) {
         alert(err);
@@ -51,6 +48,33 @@ const CreatePost = () => {
       }
     } else {
       alert("Please provide proper prompt");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (form.prompt && form.photo) {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:3000/api/v1/post", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ...form }),
+        });
+
+        await response.json();
+        alert("Success");
+        navigate("/");
+      } catch (err) {
+        alert(err);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      alert("Please generate an image with proper details");
     }
   };
 
@@ -64,7 +88,7 @@ const CreatePost = () => {
         </p>
       </div>
 
-      <form className="mt-16 max-w-3xl">
+      <form className="mt-16 max-w-3xl" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-5">
           <FormField
             labelName="Your Name"
