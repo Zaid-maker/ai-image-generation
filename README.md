@@ -22,7 +22,6 @@ npm run dev
 ## SERVER
 
 ```git
-cd server
 npm install
 copy env from .env.example it fill it
 npm run dev
