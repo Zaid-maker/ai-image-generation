@@ -1,8 +1,8 @@
 import express from "express";
 import * as dotenv from "dotenv";
 import cors from "cors";
-import mongoose from "mongoose";
 
+import connectDB from "./mongodb/connect.js";
 import postRoutes from "./routes/postRoutes.js";
 import dalleRoutes from "./routes/dalleRoutes.js";
 
@@ -18,16 +18,6 @@ app.use(
   })
 );
 
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.log(error);
-    process.exit(1);
-  }
-};
-
 app.get("/", async (req, res) => {
   res.status(200).json({
     message: "Hello from DALL.E!",
@@ -37,8 +27,13 @@ app.get("/", async (req, res) => {
 app.use("/api/v1/post", postRoutes);
 app.use("/api/v1/dalle", dalleRoutes);
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server started listening at ${PORT}`);
-  });
-});
+const startServer = async () => {
+  try {
+    connectDB(process.env.MONGODB_URL);
+    app.listen(PORT, () => console.log(`Server listening on PORT:${PORT}`));
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+startServer();
